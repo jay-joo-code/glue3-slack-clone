@@ -1,5 +1,5 @@
-<script lang="ts">
-	import ChannelDetails from '$lib/components/ChannelDetails.svelte';
+<script>
+	import { page } from '$app/stores';
 	import Channels from '$lib/components/Channels.svelte';
 	import Aside from '$lib/components/glue/Aside.svelte';
 	import Main from '$lib/components/glue/Main.svelte';
@@ -11,6 +11,6 @@
 		<Channels />
 	</Aside>
 	<Main>
-		<ChannelDetails />
+		<p>{$page?.data?.channelId}</p>
 	</Main>
 </PageContainer>
