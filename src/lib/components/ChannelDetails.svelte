@@ -83,9 +83,13 @@
 		{/if}
 
 		<!-- text input -->
-		<div class="absolute bottom-6 w-full">
+		<div class="fixed bottom-4 w-[90vw] bg-base-100/60 p-2 md:absolute md:bottom-6 md:w-full">
 			<form on:submit|preventDefault={sendMessage}>
-				<TextInput class="rounded-full border-base-content/60" bind:value={message} />
+				<TextInput
+					class="rounded-full border-base-content/60"
+					bind:value={message}
+					placeholder="Enter chat here"
+				/>
 			</form>
 		</div>
 	</div>
