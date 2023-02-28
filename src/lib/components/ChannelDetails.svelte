@@ -1,26 +1,19 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { supabase } from '$lib/glue/supabaseClient';
-	import { formatDistance, formatDistanceToNowStrict } from 'date-fns';
-	import { onMount } from 'svelte';
+	import type { RealtimeChannel } from '@supabase/realtime-js';
+	import { formatDistanceToNowStrict } from 'date-fns';
 	import TextInput from './glue/TextInput.svelte';
 
 	type TMessagesResponse = Awaited<ReturnType<typeof fetchMessages>>;
 
 	let messages: TMessagesResponse['data'] = [];
 	let message: string = '';
+	let realtimeChannel: RealtimeChannel | null = null;
 
 	const fetchMessages = async () =>
 		await supabase.from('messages').select('*, users(*)').eq('channel_id', $page?.data?.channelId);
 	const getMessages = async () => (messages = (await fetchMessages())?.data);
-
-	const realtimeChannel = supabase.channel($page?.data?.channelId, {
-		config: {
-			broadcast: {
-				self: true
-			}
-		}
-	});
 
 	const sendMessage = async () => {
 		if ($page?.data?.session) {
@@ -35,17 +28,26 @@
 					.select('*, users(*)')
 					.single();
 				if (error) throw error;
-				realtimeChannel.send({
-					type: 'broadcast',
-					event: 'new-message',
-					payload: data
-				});
+				if (realtimeChannel) {
+					realtimeChannel.send({
+						type: 'broadcast',
+						event: 'new-message',
+						payload: data
+					});
+				}
 				message = '';
 			} catch (error) {}
 		}
 	};
 
 	const subscribe = () => {
+		realtimeChannel = supabase.channel($page?.data?.channelId, {
+			config: {
+				broadcast: {
+					self: true
+				}
+			}
+		});
 		realtimeChannel
 			.on('broadcast', { event: 'new-message' }, ({ payload }) => {
 				if (payload) {
@@ -55,10 +57,10 @@
 			.subscribe();
 	};
 
-	onMount(() => {
-		subscribe();
+	$: if ($page?.data?.channelId) {
 		getMessages();
-	});
+		subscribe();
+	}
 </script>
 
 {#if $page?.data?.session}
